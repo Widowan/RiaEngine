@@ -3,6 +3,7 @@ import org.gradle.api.*
 plugins {
     java
     application
+    id("java-library")
     id("io.freefair.lombok") version "6.5.0.2"
 }
 
@@ -18,18 +19,19 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.dominion.ecs:dominion-ecs-engine:0.6.0-SNAPSHOT")
+    api("dev.dominion.ecs:dominion-ecs-engine:0.6.0-SNAPSHOT")
 
     val gdxVersion = "1.11.0"
-    implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
+    api("com.badlogicgames.gdx:gdx:$gdxVersion")
     // Painful TODO: Separate for platforms (well, that's long way ahead)
-    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
-    implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
+    api("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
+    api("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
 
-    implementation("org.greenrobot:eventbus-java:3.3.1")
+    api("org.greenrobot:eventbus-java:3.3.1")
 
-    implementation("ch.qos.logback:logback-classic:1.3.0-alpha16")
+    implementation("org.slf4j:slf4j-api:2.0.0-alpha7")
     implementation("org.slf4j:slf4j-jdk-platform-logging:2.0.0-alpha7")
+    testImplementation("ch.qos.logback:logback-classic:1.3.0-alpha16")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")

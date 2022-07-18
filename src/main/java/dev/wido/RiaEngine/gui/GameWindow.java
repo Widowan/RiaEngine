@@ -23,7 +23,7 @@ public final class GameWindow extends ApplicationAdapter {
 
     @Override
     public void render() {
-        RiaEngine.getOrCreate().schedulerTick();
+        RiaEngine.get().schedulerTick();
         camera.update();
 
         ScreenUtils.clear(Color.GRAY);
