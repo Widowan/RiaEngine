@@ -14,10 +14,10 @@ public class RiaController {
     public void addSprite(String name, Texture texture, int x, int y) {
         var sprite = new Sprite(texture);
         sprite.setPosition(x, y);
-        riaEngine.commandQueue.post(new RenderQueueAdd(new SpriteAux(sprite, name)));
+        riaEngine.getCommandQueue().post(new RenderQueueAdd(new SpriteAux(sprite, name)));
     }
 
     public void addSprite(SpriteAux spriteAux) {
-        riaEngine.commandQueue.post(new RenderQueueAdd(spriteAux));
+        riaEngine.getCommandQueue().post(new RenderQueueAdd(spriteAux));
     }
 }

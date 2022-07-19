@@ -6,6 +6,8 @@ import com.badlogic.gdx.utils.Queue;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Scheduler;
 import dev.wido.RiaEngine.gui.GameWindow;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.greenrobot.eventbus.EventBus;
@@ -22,22 +24,22 @@ public final class RiaEngine {
         System.setProperty("dominion.show-banner", "false");
     }
 
-    public final Dominion  ecs        = Dominion.create("Ria");
-    public final EventBus  eventQueue = EventBus.builder()
+    @Getter private final Dominion  ecs        = Dominion.create("Ria");
+    @Getter private final EventBus  eventQueue = EventBus.builder()
         // Config files are for the weak (c) Greenrobot, probably
         .logNoSubscriberMessages(false).sendNoSubscriberEvent(false).build();
-    public final EventBus commandQueue = EventBus.builder()
+    @Getter private final EventBus commandQueue = EventBus.builder()
         .logNoSubscriberMessages(false).sendNoSubscriberEvent(false).build();
-    public final RiaController controller = new RiaController(this);
+    @Getter private RiaController controller;
 
-    private final Scheduler scheduler = ecs.createScheduler();
-
+    private static RiaEngine instance = null;
     private boolean setUp = false;
+    private final Scheduler scheduler = getEcs().createScheduler();
 
-    static RiaEngine instance = null;
-
-    final Queue<Runnable> scheduleOnceSystemsQueue = new Queue<>();
-    final Queue<Runnable> parallelScheduleOnceSystemsQueue = new Queue<>();
+    @Getter(AccessLevel.PRIVATE)
+    private final Queue<Runnable> scheduleOnceSystemsQueue = new Queue<>();
+    @Getter(AccessLevel.PRIVATE)
+    private final Queue<Runnable> parallelScheduleOnceSystemsQueue = new Queue<>();
 
     private RiaEngine() {}
 
@@ -48,6 +50,7 @@ public final class RiaEngine {
         val ria = new RiaEngine();
         for (var r : Systems.getSystems()) ria.scheduler.schedule(r);
         RiaEngine.instance = ria;
+        ria.controller = new RiaController(ria);
         return ria;
     }
 
@@ -69,34 +72,37 @@ public final class RiaEngine {
         new Lwjgl3Application(game, cfg);
     }
 
+    @SuppressWarnings("unused")
     public void schedule(Runnable system) {
         scheduler.schedule(system);
     }
 
+    @SuppressWarnings("unused")
     public void parallelSchedule(Runnable system) {
         scheduler.parallelSchedule(system);
     }
 
+    @SuppressWarnings("unused")
     public void parallelSchedule(Runnable... systems) {
         scheduler.parallelSchedule(systems);
     }
 
     public void scheduleOnce(Runnable system) {
-        synchronized (scheduleOnceSystemsQueue) {
-            this.scheduleOnceSystemsQueue.addLast(system);
+        synchronized (getScheduleOnceSystemsQueue()) {
+            getScheduleOnceSystemsQueue().addLast(system);
         }
     }
 
     public void parallelScheduleOnce(Runnable system) {
-        synchronized (parallelScheduleOnceSystemsQueue) {
-            this.parallelScheduleOnceSystemsQueue.addLast(system);
+        synchronized (getParallelScheduleOnceSystemsQueue()) {
+            getParallelScheduleOnceSystemsQueue().addLast(system);
         }
     }
 
     public void parallelScheduleOnce(Runnable... systems) {
-        synchronized (parallelScheduleOnceSystemsQueue) {
+        synchronized (getParallelScheduleOnceSystemsQueue()) {
             for (var s : systems)
-                this.parallelScheduleOnceSystemsQueue.addLast(s);
+                getParallelScheduleOnceSystemsQueue().addLast(s);
         }
     }
 
@@ -106,7 +112,7 @@ public final class RiaEngine {
 
     //////////////////////////////
     private static class Systems {
-        private static List<Runnable> systems = null;
+        private static List<Runnable> systems;
 
         private Systems() {}
 
@@ -124,34 +130,37 @@ public final class RiaEngine {
             return systems;
         }
 
+        @SuppressWarnings("unused")
         static Runnable ExecOnceSystem = () -> {
             var ria = RiaEngine.get();
-            if (ria.scheduleOnceSystemsQueue.size == 0)
+            if (ria.getScheduleOnceSystemsQueue().isEmpty())
                 return;
 
-            synchronized (ria.scheduleOnceSystemsQueue) {
+            synchronized (ria.getScheduleOnceSystemsQueue()) {
                 // Theoretically I could've used forkAndJoin, but that's just waste of resources
                 // even not considering additional checks by Dominion; why does it even exist?
-                ria.scheduleOnceSystemsQueue.forEach(Runnable::run);
-                ria.scheduleOnceSystemsQueue.clear();
+                ria.getScheduleOnceSystemsQueue().forEach(Runnable::run);
+                ria.getScheduleOnceSystemsQueue().clear();
             }
         };
+        
+        @SuppressWarnings("unused")
         static Runnable ParallelExecOnceSystem = () -> {
             var ria = RiaEngine.get();
-            if (ria.parallelScheduleOnceSystemsQueue.size == 0)
+            if (ria.getParallelScheduleOnceSystemsQueue().size == 0)
                 return;
 
-            synchronized (ria.parallelScheduleOnceSystemsQueue) {
-                Runnable[] arr = new Runnable[ria.parallelScheduleOnceSystemsQueue.size];
+            synchronized (ria.getParallelScheduleOnceSystemsQueue()) {
+                Runnable[] arr = new Runnable[ria.getParallelScheduleOnceSystemsQueue().size];
 
                 int idx = 0;
-                for (var r : ria.parallelScheduleOnceSystemsQueue) {
+                for (var r : ria.getParallelScheduleOnceSystemsQueue()) {
                     arr[idx] = r;
                     idx += 1;
                 }
 
                 ria.scheduler.forkAndJoinAll(arr);
-                ria.parallelScheduleOnceSystemsQueue.clear();
+                ria.getParallelScheduleOnceSystemsQueue().clear();
             }
         };
     }

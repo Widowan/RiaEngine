@@ -15,7 +15,7 @@ public final class RenderLogicHandler {
 
     RenderLogicHandler(GameWindow game) {
         this.game = game;
-        RiaEngine.get().commandQueue.register(this);
+        RiaEngine.get().getCommandQueue().register(this);
     }
 
     @Subscribe

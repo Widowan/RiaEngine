@@ -20,7 +20,7 @@ public class Main {
             var sprite = new Sprite(new Texture("a.png"));
             sprite.setPosition(200, 150);
 
-            RiaEngine.get().controller.addSprite(
+            RiaEngine.get().getController().addSprite(
                 new SpriteAux(
                     sprite,
                     "auf"

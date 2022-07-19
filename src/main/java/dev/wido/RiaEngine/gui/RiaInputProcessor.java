@@ -5,7 +5,7 @@ import dev.wido.RiaEngine.events.input.*;
 import org.greenrobot.eventbus.EventBus;
 
 class RiaInputProcessor implements com.badlogic.gdx.InputProcessor {
-    private final EventBus eq = RiaEngine.get().eventQueue;
+    private final EventBus eq = RiaEngine.get().getEventQueue();
 
     @Override
     public boolean keyDown(int keycode) {
